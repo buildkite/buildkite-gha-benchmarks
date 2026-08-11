@@ -24,8 +24,8 @@ Create a Buildkite build for the same repository commit with
 Buildkite plugin and exact `buildkite-gha` source commit. Builds without that
 environment value run only the static harness checks, so pushes and pull
 requests cannot accidentally start the paid Kafka workload. The source pin can
-return to a released runtime after its `actions/setup-java` compatibility fix
-ships.
+return to a released runtime after the merged compatibility implementation is
+released.
 
 Each successful workload writes `benchmark-result.json`. Failed Gradle builds
 also write a result and return the original failure status. A failure before
