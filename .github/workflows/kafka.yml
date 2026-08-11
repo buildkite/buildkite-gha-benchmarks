@@ -1,7 +1,7 @@
-name: Kafka / Buildkite
+name: Kafka
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -25,8 +25,6 @@ jobs:
           token: ""
 
       - name: Run Kafka canary
-        env:
-          BENCHMARK_PROVIDER: buildkite
         run: scripts/run-kafka
 
       - name: Upload benchmark result

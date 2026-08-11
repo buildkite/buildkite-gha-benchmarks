@@ -1,8 +1,9 @@
 # buildkite-gha benchmarks
 
-This repository measures the same pinned open-source workloads on GitHub
-Actions, Depot runners, and Buildkite Hosted through
-[`buildkite-gha`](https://github.com/buildkite/buildkite-gha).
+This repository runs pinned open-source workloads on Buildkite Hosted through
+[`buildkite-gha`](https://github.com/buildkite/buildkite-gha). It provides a
+stable performance canary and concrete workflows for hill-climbing GitHub
+Actions compatibility on Buildkite.
 
 The first workload is an engineering canary, not a published performance
 claim: Apache Kafka at one exact commit, built with Java 21 and
@@ -10,35 +11,16 @@ claim: Apache Kafka at one exact commit, built with Java 21 and
 result contracts before repetition, cache, cost, and reporting automation are
 added.
 
-## Current lanes
-
-| Lane | Runner | Workflow |
-| --- | --- | --- |
-| GitHub Actions | Public `ubuntu-24.04` (4 vCPU, 16 GB) | `.github/workflows/kafka-github-depot.yml` |
-| Depot | `depot-ubuntu-24.04-4` (4 vCPU, 16 GB) | `.github/workflows/kafka-github-depot.yml` |
-| Buildkite | Hosted queue via `buildkite-gha` | `.github/workflows/kafka-buildkite.yml` |
-
-Every lane uses [`scripts/fetch-source`](scripts/fetch-source) and
+The first workload uses [`scripts/fetch-source`](scripts/fetch-source) and
 [`scripts/run-kafka`](scripts/run-kafka). The upstream repository and commit
-are locked in [`benchmarks/lock.json`](benchmarks/lock.json). Provider setup is
-allowed to differ, but source selection and the measured command are shared.
+are locked in [`benchmarks/lock.json`](benchmarks/lock.json), and the measured
+command lives in [`workloads/kafka`](workloads/kafka).
 
 ## Run the canary
 
-Prerequisites:
-
-- the Depot GitHub App is installed for this public repository and its runner
-  group permits public repositories;
-- the `buildkite-gha-benchmarks` Buildkite pipeline is connected to this
-  repository and targets the Hosted queue; and
-- the selected commit is pushed before either provider is dispatched.
-
-Run **Kafka / GitHub and Depot** manually from the repository's Actions page.
-The one dispatch starts both jobs together.
-
 Create a Buildkite build for the same repository commit with
 `BENCHMARK=kafka` to run the Buildkite lane. The pipeline imports
-`.github/workflows/kafka-buildkite.yml` using the pinned `github-actions`
+`.github/workflows/kafka.yml` using the pinned `github-actions`
 Buildkite plugin and exact `buildkite-gha` source commit. Builds without that
 environment value run only the static harness checks, so pushes and pull
 requests cannot accidentally start the paid Kafka workload. The source pin can

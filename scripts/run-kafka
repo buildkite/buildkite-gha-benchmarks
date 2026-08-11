@@ -4,16 +4,6 @@ set -uo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly root
 
-provider=${BENCHMARK_PROVIDER:-}
-case "$provider" in
-  github|depot|buildkite) ;;
-  *)
-    echo 'BENCHMARK_PROVIDER must be github, depot, or buildkite' >&2
-    exit 2
-    ;;
-esac
-readonly provider
-
 harness_sha=${GITHUB_SHA:-}
 if [[ ! "$harness_sha" =~ ^[0-9a-f]{40}$ ]]; then
   echo 'GITHUB_SHA must be the exact harness commit' >&2
@@ -85,7 +75,6 @@ tmp_result="$result.tmp"
 jq -n \
   --arg schema 'buildkite-gha-benchmarks/result/v1' \
   --arg workload kafka \
-  --arg provider "$provider" \
   --arg harness_sha "$harness_sha" \
   --arg repository "$repository" \
   --arg upstream_sha "$upstream_sha" \
@@ -107,7 +96,7 @@ jq -n \
   {
     schema: $schema,
     workload: $workload,
-    provider: $provider,
+    provider: "buildkite",
     harness_sha: $harness_sha,
     upstream: {
       repository: $repository,
