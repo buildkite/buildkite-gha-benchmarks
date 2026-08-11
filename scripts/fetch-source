@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo 'usage: scripts/fetch-source <workload> <destination>' >&2
+}
+
+if (( $# != 2 )); then
+  usage
+  exit 2
+fi
+
+readonly workload=$1 destination=$2
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly root lock="$root/benchmarks/lock.json"
+
+entry="$(jq -cer --arg workload "$workload" \
+  '.workloads[$workload] | select(type == "object")' "$lock")" || {
+  echo "unknown workload: $workload" >&2
+  exit 2
+}
+repository="$(jq -r '.repository' <<<"$entry")"
+commit="$(jq -r '.commit' <<<"$entry")"
+readonly entry repository commit
+
+if [[ ! "$repository" =~ ^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\.git$ ]]; then
+  echo "workload $workload has an invalid public GitHub repository" >&2
+  exit 1
+fi
+if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "workload $workload has an invalid commit" >&2
+  exit 1
+fi
+if [[ -e "$destination" ]]; then
+  echo "source destination already exists: $destination" >&2
+  exit 1
+fi
+
+mkdir -p "$destination"
+git -C "$destination" init --quiet
+git -C "$destination" remote add origin "$repository"
+git -C "$destination" \
+  -c protocol.file.allow=never \
+  -c protocol.ext.allow=never \
+  fetch --quiet --no-tags --depth=1 origin "$commit"
+git -C "$destination" checkout --quiet --detach FETCH_HEAD
+
+actual="$(git -C "$destination" rev-parse HEAD)"
+readonly actual
+if [[ "$actual" != "$commit" ]]; then
+  echo "source checkout is $actual, expected $commit" >&2
+  exit 1
+fi
+
+printf 'Fetched %s at %s\n' "$repository" "$actual"

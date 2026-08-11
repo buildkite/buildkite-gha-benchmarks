@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (( $# != 1 )); then
+  echo 'usage: workloads/kafka <source-directory>' >&2
+  exit 2
+fi
+
+readonly source_directory=$1
+cd "$source_directory"
+exec ./gradlew build -x test

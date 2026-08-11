@@ -1,0 +1,68 @@
+name: Kafka / GitHub and Depot
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  github:
+    name: GitHub cacheless
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout benchmark harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          token: ""
+
+      - name: Run Kafka canary
+        env:
+          BENCHMARK_PROVIDER: github
+        run: scripts/run-kafka
+
+      - name: Upload benchmark result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: kafka-github-result
+          path: benchmark-result.json
+          if-no-files-found: warn
+
+  depot:
+    name: Depot cacheless
+    runs-on: depot-ubuntu-24.04-4
+    timeout-minutes: 60
+    steps:
+      - name: Checkout benchmark harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          token: ""
+
+      - name: Run Kafka canary
+        env:
+          BENCHMARK_PROVIDER: depot
+        run: scripts/run-kafka
+
+      - name: Upload benchmark result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: kafka-depot-result
+          path: benchmark-result.json
+          if-no-files-found: warn

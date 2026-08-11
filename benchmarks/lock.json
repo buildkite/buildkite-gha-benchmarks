@@ -1,0 +1,9 @@
+{
+  "schema": "buildkite-gha-benchmarks/lock/v1",
+  "workloads": {
+    "kafka": {
+      "repository": "https://github.com/apache/kafka.git",
+      "commit": "3afec2a52d6086f7b34fc2dc8c86531c569cd786"
+    }
+  }
+}

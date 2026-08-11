@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly root
+cd "$root"
+
+jq -e '
+  .schema == "buildkite-gha-benchmarks/lock/v1" and
+  (.workloads | keys == ["kafka"]) and
+  (.workloads.kafka.repository == "https://github.com/apache/kafka.git") and
+  (.workloads.kafka.commit | test("^[0-9a-f]{40}$"))
+' benchmarks/lock.json >/dev/null
+
+shellcheck scripts/check scripts/fetch-source scripts/run-kafka workloads/kafka
+
+if command -v actionlint >/dev/null; then
+  actionlint
+fi
+
+for workflow in .github/workflows/kafka-buildkite.yml .github/workflows/kafka-github-depot.yml; do
+  grep -Fq 'workflow_dispatch:' "$workflow" || {
+    echo "benchmark workflow is not manual-only: $workflow" >&2
+    exit 1
+  }
+done
+
+grep -Fq 'if: build.env("BENCHMARK") == "kafka"' .buildkite/pipeline.yml || {
+  echo 'Buildkite Kafka workload is not manually gated' >&2
+  exit 1
+}
+
+for script in scripts/check scripts/fetch-source scripts/run-kafka workloads/kafka; do
+  test -x "$script" || {
+    echo "script is not executable: $script" >&2
+    exit 1
+  }
+done
+
+echo 'Static benchmark checks passed.'
