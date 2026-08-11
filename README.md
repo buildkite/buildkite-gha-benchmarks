@@ -7,9 +7,9 @@ Actions compatibility on Buildkite.
 
 The first workload is an engineering canary, not a published performance
 claim: Apache Kafka at one exact commit, built with Java 21 and
-`./gradlew build -x test`. It establishes the source, execution, timing, and
-result contracts before repetition, cache, cost, and reporting automation are
-added.
+`./gradlew --no-build-cache build -x test`. It establishes the source,
+execution, timing, and result contracts before repetition, cache, cost, and
+reporting automation are added.
 
 The first workload uses [`scripts/fetch-source`](scripts/fetch-source) and
 [`scripts/run-kafka`](scripts/run-kafka). The upstream repository and commit
@@ -34,8 +34,8 @@ is represented by the provider's job result instead.
 
 ## What “cacheless” means
 
-The canary gives Gradle a fresh job-private `GRADLE_USER_HOME` and does not
-enable Gradle's build cache. Dependency and Gradle distribution downloads are
+The canary gives Gradle a fresh job-private `GRADLE_USER_HOME` and explicitly
+disables Gradle's build cache. Dependency and Gradle distribution downloads are
 therefore part of the measured command. It does not claim that provider-level
 network, operating-system, or transparent storage caches are absent.
 
