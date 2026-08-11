@@ -1,0 +1,24 @@
+agents:
+  queue: "hosted"
+
+steps:
+  - label: ":mag: Check benchmark harness"
+    key: "benchmark-checks"
+    command: "scripts/check"
+    plugins:
+      - mise#a5845c5082d3a4fe36dd77ae74973dfc86fc91a2:
+          version: "2026.5.12"
+
+  - label: ":github: Kafka via buildkite-gha"
+    key: "kafka-buildkite-gha"
+    if: build.env("BENCHMARK") == "kafka"
+    timeout_in_minutes: 20
+    retry:
+      automatic: false
+    cache: "/cache/bkcache/github-actions-buildkite-plugin"
+    plugins:
+      - mise#a5845c5082d3a4fe36dd77ae74973dfc86fc91a2:
+          version: "2026.5.12"
+      - github-actions#v0.7.1:
+          workflow: .github/workflows/kafka.yml
+          buildkite-gha-source-ref: "c62e9fb16d4c943b97e976274e0f5e896573e081"
