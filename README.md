@@ -21,11 +21,12 @@ command lives in [`workloads/kafka`](workloads/kafka).
 Create a Buildkite build for the same repository commit with
 `BENCHMARK=kafka` to run the Buildkite lane. The pipeline imports
 `.github/workflows/kafka.yml` using the pinned `github-actions`
-Buildkite plugin and exact `buildkite-gha` source commit. Builds without that
-environment value run only the static harness checks, so pushes and pull
-requests cannot accidentally start the paid Kafka workload. The source pin can
-return to a released runtime after the merged compatibility implementation is
-released.
+Buildkite plugin and exact `buildkite-gha` source commit. It maps
+`ubuntu-24.04` to the `hosted-m` queue because Kafka's upstream Gradle settings
+request a 4 GiB daemon heap. Builds without `BENCHMARK=kafka` run only the
+static harness checks, so pushes and pull requests cannot accidentally start
+the paid Kafka workload. The source pin can return to a released runtime after
+the merged compatibility implementation is released.
 
 Each successful workload writes `benchmark-result.json`. Failed Gradle builds
 also write a result and return the original failure status. A failure before

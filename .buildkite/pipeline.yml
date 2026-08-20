@@ -23,3 +23,6 @@ steps:
       - github-actions#v0.7.1:
           workflow: .github/workflows/kafka.yml
           buildkite-gha-source-ref: "606e79cc74f9b23c69d510207c146bc7b489b3c4"
+          runners:
+            - runs-on: ubuntu-24.04
+              queue: hosted-m

@@ -33,6 +33,11 @@ grep -Fq 'if: build.env("BENCHMARK") == "kafka"' .buildkite/pipeline.yml || {
   exit 1
 }
 
+grep -Fq 'queue: hosted-m' .buildkite/pipeline.yml || {
+  echo 'Kafka workflow is not assigned to the memory-sized hosted queue' >&2
+  exit 1
+}
+
 for script in scripts/check scripts/fetch-source scripts/run-kafka workloads/kafka; do
   test -x "$script" || {
     echo "script is not executable: $script" >&2
