@@ -21,4 +21,4 @@ steps:
           version: "2026.5.12"
       - github-actions#v0.7.1:
           workflow: .github/workflows/kafka.yml
-          buildkite-gha-source-ref: "80acbc0ee6b4ab22113754044a85d57c020cbc34"
+          buildkite-gha-source-ref: "606e79cc74f9b23c69d510207c146bc7b489b3c4"
