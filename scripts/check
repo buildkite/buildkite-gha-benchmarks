@@ -43,6 +43,11 @@ grep -Fq 'github-actions#v0.9.3:' .buildkite/pipeline.yml || {
   exit 1
 }
 
+grep -Fq 'version: "0.29.0"' .buildkite/pipeline.yml || {
+  echo 'buildkite-gha runtime release is not pinned' >&2
+  exit 1
+}
+
 for script in scripts/check scripts/fetch-source scripts/run-kafka workloads/kafka; do
   test -x "$script" || {
     echo "script is not executable: $script" >&2
