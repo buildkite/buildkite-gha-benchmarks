@@ -38,6 +38,11 @@ grep -Fq 'queue: hosted-m' .buildkite/pipeline.yml || {
   exit 1
 }
 
+grep -Fq 'github-actions#v0.9.3:' .buildkite/pipeline.yml || {
+  echo 'GitHub Actions importer does not support configured runner profiles' >&2
+  exit 1
+}
+
 for script in scripts/check scripts/fetch-source scripts/run-kafka workloads/kafka; do
   test -x "$script" || {
     echo "script is not executable: $script" >&2
