@@ -1,9 +1,21 @@
 {
   "schema": "buildkite-gha-benchmarks/lock/v1",
   "workloads": {
+    "grpc": {
+      "repository": "https://github.com/grpc/grpc.git",
+      "commit": "c9bdb307f6866cafea399749a7eb6daa6dd71d7c"
+    },
     "kafka": {
       "repository": "https://github.com/apache/kafka.git",
-      "commit": "3afec2a52d6086f7b34fc2dc8c86531c569cd786"
+      "commit": "e28414ee4a1dfa3d093dc10168f944f1a759434e"
+    },
+    "mastodon": {
+      "repository": "https://github.com/mastodon/mastodon.git",
+      "commit": "2f40549d41d77bd4941214e1915074d2e9113b80"
+    },
+    "posthog": {
+      "repository": "https://github.com/PostHog/posthog.git",
+      "commit": "11b5b8ce384b6d1f99d4f6959a01461485c5c91b"
     }
   }
 }

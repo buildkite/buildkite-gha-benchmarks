@@ -5,16 +5,22 @@ This repository runs pinned open-source workloads on Buildkite Hosted through
 stable performance canary and concrete workflows for hill-climbing GitHub
 Actions compatibility on Buildkite.
 
-The first workload is an engineering canary, not a published performance
-claim: Apache Kafka at one exact commit, built with Java 21 and
-`./gradlew --no-build-cache build -x test`. It establishes the source,
-execution, timing, and result contracts before repetition, cache, cost, and
-reporting automation are added.
+The repository pins four engineering targets: Apache Kafka, gRPC, Mastodon,
+and PostHog. The target commands build Kafka with Gradle, gRPC with Bazel, and
+multi-platform Mastodon and PostHog container images. These are workload
+contracts, not published performance claims.
 
-The first workload uses [`scripts/fetch-source`](scripts/fetch-source) and
-[`scripts/run-kafka`](scripts/run-kafka). The upstream repository and commit
-are locked in [`benchmarks/lock.json`](benchmarks/lock.json), and the measured
-command lives in [`workloads/kafka`](workloads/kafka).
+Upstream repositories and commits are locked in
+[`benchmarks/lock.json`](benchmarks/lock.json). Exact measured commands live in
+[`workloads`](workloads). Kafka is the first executable provider lane and uses
+[`scripts/run-kafka`](scripts/run-kafka).
+
+| Target | Command |
+| --- | --- |
+| Kafka | `./gradlew --build-cache build -x test` |
+| gRPC | `bazel build :grpc` |
+| Mastodon | `docker buildx build --platform linux/amd64,linux/arm64` |
+| PostHog | Mastodon command plus `BUILDKIT_CONTEXT_KEEP_GIT_DIR=1` |
 
 ## Run the canary
 
@@ -23,29 +29,29 @@ Create a Buildkite build for the same repository commit with
 `.github/workflows/kafka.yml` using the pinned `github-actions`
 Buildkite plugin and `buildkite-gha` release. It maps
 `ubuntu-24.04` to the `hosted-m` queue because Kafka's upstream Gradle settings
-request a 4 GiB daemon heap. Builds without `BENCHMARK=kafka` run only the
-static harness checks, so pushes and pull requests cannot accidentally start
-the paid Kafka workload.
+request a 4 GiB daemon heap. The lane enables Gradle's local build cache and
+transports Gradle User Home through the setup action. Builds without
+`BENCHMARK=kafka` run only the static harness checks, so pushes and pull
+requests cannot accidentally start the paid Kafka workload.
 
 Each successful workload writes `benchmark-result.json`. Failed Gradle builds
 also write a result and return the original failure status. A failure before
 the benchmark script starts, such as Java setup or job provisioning failure,
 is represented by the provider's job result instead.
 
-## What “cacheless” means
+## Cache modes
 
-The canary gives Gradle a fresh job-private `GRADLE_USER_HOME` and explicitly
-disables Gradle's build cache. Dependency and Gradle distribution downloads are
-therefore part of the measured command. It does not claim that provider-level
-network, operating-system, or transparent storage caches are absent.
+The Kafka lane currently measures cached/default operation. It enables the
+local Gradle build cache and allows the setup action to restore and save Gradle
+User Home. A cacheless mode must use a separate cache namespace and result
+series; cached and cacheless results must not be combined.
 
-This mode is intentionally distinct from a future provider-recommended mode,
-where each provider's normal remote caches and accelerators will be enabled.
-The two modes must not be combined into one speedup figure.
+Provider-level network, operating-system, and transparent storage caches may
+still affect either mode.
 
 ## Validate locally
 
-The lightweight checks do not clone or build Kafka:
+The lightweight checks do not clone or build upstream projects:
 
 ```sh
 scripts/check

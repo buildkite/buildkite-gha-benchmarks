@@ -32,8 +32,6 @@ fetch_finished_ns="$(now_ns)"
 
 workload_duration_json=null
 if (( status == 0 )); then
-  export GRADLE_USER_HOME="$work/gradle-home"
-  mkdir -p "$GRADLE_USER_HOME"
   workload_started_ns="$(now_ns)"
   "$root/workloads/kafka" "$source" || status=$?
   workload_finished_ns="$(now_ns)"
@@ -96,6 +94,7 @@ jq -n \
   {
     schema: $schema,
     workload: $workload,
+    mode: "cached",
     provider: "buildkite",
     harness_sha: $harness_sha,
     upstream: {
