@@ -27,17 +27,21 @@ jobs:
           echo "CC=$(command -v gcc)" >> "$GITHUB_ENV"
           echo "CXX=$(command -v g++)" >> "$GITHUB_ENV"
 
+      - name: Fetch gRPC source
+        run: scripts/fetch-source grpc upstream
+
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # v0.19.0
         with:
-          cache-version: grpc-cross-provider-20260822-v2
+          cache-version: grpc-cross-provider-20260822-v3
           bazelisk-cache: true
-          disk-cache: grpc-cross-provider-20260822-v2
+          disk-cache: grpc-cross-provider-20260822-v3
+          module-root: upstream
           repository-cache: true
           token: ""
 
       - name: Run gRPC canary
-        run: scripts/run-workload grpc
+        run: scripts/run-workload grpc upstream
 
       - name: Upload benchmark result
         if: always()
