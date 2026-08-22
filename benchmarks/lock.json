@@ -11,7 +11,7 @@
     },
     "mastodon": {
       "repository": "https://github.com/mastodon/mastodon.git",
-      "commit": "2f40549d41d77bd4941214e1915074d2e9113b80"
+      "commit": "450e1a713f1e015718adc208f126b8b7d908c169"
     },
     "posthog": {
       "repository": "https://github.com/PostHog/posthog.git",

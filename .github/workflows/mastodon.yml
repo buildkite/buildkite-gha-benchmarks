@@ -32,5 +32,5 @@ jobs:
         with:
           context: upstream
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=mastodon-cross-provider-20260822
+          cache-to: type=gha,mode=max,scope=mastodon-cross-provider-20260822
