@@ -7,12 +7,18 @@ cd "$root"
 
 jq -e '
   .schema == "buildkite-gha-benchmarks/lock/v1" and
-  (.workloads | keys == ["kafka"]) and
+  (.workloads | keys == ["grpc", "kafka", "mastodon", "posthog"]) and
+  (.workloads.grpc.repository == "https://github.com/grpc/grpc.git") and
   (.workloads.kafka.repository == "https://github.com/apache/kafka.git") and
-  (.workloads.kafka.commit | test("^[0-9a-f]{40}$"))
+  (.workloads.mastodon.repository == "https://github.com/mastodon/mastodon.git") and
+  (.workloads.posthog.repository == "https://github.com/PostHog/posthog.git") and
+  (.workloads | to_entries | all(
+    .value.repository | test("^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\\.git$")
+  )) and
+  (.workloads | to_entries | all(.value.commit | test("^[0-9a-f]{40}$")))
 ' benchmarks/lock.json >/dev/null
 
-shellcheck scripts/check scripts/fetch-source scripts/run-kafka workloads/kafka
+shellcheck scripts/check scripts/fetch-source scripts/run-kafka workloads/*
 
 if command -v actionlint >/dev/null; then
   actionlint
@@ -48,7 +54,17 @@ grep -Fq 'version: "0.29.0"' .buildkite/pipeline.yml || {
   exit 1
 }
 
-for script in scripts/check scripts/fetch-source scripts/run-kafka workloads/kafka; do
+grep -Fq 'gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808' .github/workflows/kafka.yml || {
+  echo 'Kafka Gradle cache setup is not pinned' >&2
+  exit 1
+}
+
+grep -Fq './gradlew --build-cache build -x test' workloads/kafka || {
+  echo 'Kafka measured command has drifted' >&2
+  exit 1
+}
+
+for script in scripts/check scripts/fetch-source scripts/run-kafka workloads/*; do
   test -x "$script" || {
     echo "script is not executable: $script" >&2
     exit 1

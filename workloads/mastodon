@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (( $# != 1 )); then
+  echo 'usage: workloads/mastodon <source-directory>' >&2
+  exit 2
+fi
+
+readonly source_directory=$1
+exec docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  "$source_directory"
