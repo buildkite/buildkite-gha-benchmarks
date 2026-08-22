@@ -21,8 +21,9 @@ jobs:
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@f3f50ea6791b9b0f4c4eeabba4507422426462f5 # v0.9.1
         with:
+          cache-version: grpc-cross-provider-20260822
           bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
+          disk-cache: grpc-cross-provider-20260822
           repository-cache: true
           token: ""
 
