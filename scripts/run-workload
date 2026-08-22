@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-if (( $# != 1 )); then
-  echo 'usage: scripts/run-workload <workload>' >&2
+if (( $# < 1 || $# > 2 )); then
+  echo 'usage: scripts/run-workload <workload> [source-directory]' >&2
   exit 2
 fi
 
@@ -25,11 +25,6 @@ readonly harness_sha
 readonly result="$root/benchmark-result.json"
 rm -f -- "$result"
 
-runner_temp=${RUNNER_TEMP:-${TMPDIR:-/tmp}}
-work="$(mktemp -d "$runner_temp/buildkite-gha-benchmark.XXXXXXXX")"
-readonly work source="$work/$workload"
-trap 'rm -rf -- "$work"' EXIT
-
 now_ns() {
   date +%s%N
 }
@@ -38,8 +33,22 @@ started_ns="$(now_ns)"
 readonly started_ns
 fetch_started_ns="$(now_ns)"
 status=0
-"$root/scripts/fetch-source" "$workload" "$source" || status=$?
+if (( $# == 2 )); then
+  source="$(cd "$2" && pwd)"
+  expected_sha="$(jq -r --arg workload "$workload" '.workloads[$workload].commit' "$root/benchmarks/lock.json")"
+  if [[ $(git -C "$source" rev-parse HEAD) != "$expected_sha" ]]; then
+    echo "$workload source is not at locked commit $expected_sha" >&2
+    exit 1
+  fi
+else
+  runner_temp=${RUNNER_TEMP:-${TMPDIR:-/tmp}}
+  work="$(mktemp -d "$runner_temp/buildkite-gha-benchmark.XXXXXXXX")"
+  source="$work/$workload"
+  trap 'rm -rf -- "$work"' EXIT
+  "$root/scripts/fetch-source" "$workload" "$source" || status=$?
+fi
 fetch_finished_ns="$(now_ns)"
+readonly source
 
 workload_duration_json=null
 if (( status == 0 )); then

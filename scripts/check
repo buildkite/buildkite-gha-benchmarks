@@ -64,7 +64,7 @@ grep -Fq 'gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1' 
   exit 1
 }
 
-grep -Fq 'bazel-contrib/setup-bazel@f3f50ea6791b9b0f4c4eeabba4507422426462f5' .github/workflows/grpc.yml || {
+grep -Fq 'bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86' .github/workflows/grpc.yml || {
   echo 'gRPC Bazel cache setup is not pinned' >&2
   exit 1
 }

@@ -66,6 +66,23 @@ This is one observed transition, not an aggregate. The workflow uses a unique
 Gradle cache-key prefix and strict cache matching so neither provider can
 restore a previous result series.
 
+## gRPC result
+
+On August 22, 2026, both providers ran the same isolated gRPC cache transition
+on four CPUs and 16 GiB memory. The prime built `80eb9754`, then the measured
+run advanced to `c9bdb307`. Both providers reported identical Bazel process
+outcomes. Times show the measured workload followed by the complete job in
+parentheses.
+
+| Phase | GitHub Actions | Buildkite | Disk hits | Local | Internal |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Prime | [17m15 (19m36)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/32570667611) | [6m26 (7m52)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/57) | 0 | 2,013 | 283 |
+| Measured | [57s (3m15)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/32571591918) | [17s (1m44)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/59) | 2,012 | 1 | 283 |
+
+This is one observed transition, not an aggregate. The workflow uses a unique
+setup-bazel cache version and a stable source path so restored disk-cache action
+keys match on both providers.
+
 ## Validate locally
 
 The lightweight checks do not clone or build upstream projects:

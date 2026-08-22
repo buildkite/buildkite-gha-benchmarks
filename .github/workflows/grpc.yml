@@ -12,22 +12,38 @@ jobs:
     name: Cached build
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      GRPC_SOURCE: /home/runner/buildkite-gha-benchmarks/grpc
     steps:
       - name: Checkout benchmark harness
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      - name: Set up C++ toolchain
+        run: |
+          if ! command -v gcc >/dev/null || ! command -v g++ >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --yes build-essential
+          fi
+          echo "CC=$(command -v gcc)" >> "$GITHUB_ENV"
+          echo "CXX=$(command -v g++)" >> "$GITHUB_ENV"
+
+      - name: Fetch gRPC source
+        run: scripts/fetch-source grpc "$GRPC_SOURCE"
+
       - name: Set up Bazel
-        uses: bazel-contrib/setup-bazel@f3f50ea6791b9b0f4c4eeabba4507422426462f5 # v0.9.1
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # v0.19.0
         with:
+          cache-version: grpc-cross-provider-20260822-v4
           bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
+          disk-cache: grpc-cross-provider-20260822-v4
+          module-root: /home/runner/buildkite-gha-benchmarks/grpc
           repository-cache: true
           token: ""
 
       - name: Run gRPC canary
-        run: scripts/run-workload grpc
+        run: scripts/run-workload grpc "$GRPC_SOURCE"
 
       - name: Upload benchmark result
         if: always()
