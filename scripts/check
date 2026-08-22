@@ -18,29 +18,34 @@ jq -e '
   (.workloads | to_entries | all(.value.commit | test("^[0-9a-f]{40}$")))
 ' benchmarks/lock.json >/dev/null
 
-shellcheck scripts/check scripts/fetch-source scripts/run-kafka workloads/*
+shellcheck scripts/check scripts/fetch-source scripts/run-* workloads/*
 
 if command -v actionlint >/dev/null; then
   actionlint
 fi
 
-grep -Fq 'workflow_call:' .github/workflows/kafka.yml || {
-  echo 'Kafka workflow is not reusable' >&2
-  exit 1
-}
+for workload in grpc kafka mastodon posthog; do
+  workflow=".github/workflows/$workload.yml"
+  grep -Fq 'workflow_call:' "$workflow" || {
+    echo "$workload workflow is not reusable" >&2
+    exit 1
+  }
+  grep -Fq 'workflow_dispatch:' "$workflow" || {
+    echo "$workload workflow is not directly runnable for API builds" >&2
+    exit 1
+  }
+  grep -Fq "if: build.env(\"BENCHMARK\") == \"$workload\"" .buildkite/pipeline.yml || {
+    echo "Buildkite $workload workload is not manually gated" >&2
+    exit 1
+  }
+  grep -Fq 'runs-on: ubuntu-24.04' "$workflow" || {
+    echo "$workload workflow runner has drifted" >&2
+    exit 1
+  }
+done
 
-grep -Fq 'workflow_dispatch:' .github/workflows/kafka.yml || {
-  echo 'Kafka workflow is not directly runnable for API builds' >&2
-  exit 1
-}
-
-grep -Fq 'if: build.env("BENCHMARK") == "kafka"' .buildkite/pipeline.yml || {
-  echo 'Buildkite Kafka workload is not manually gated' >&2
-  exit 1
-}
-
-grep -Fq 'queue: hosted-m' .buildkite/pipeline.yml || {
-  echo 'Kafka workflow is not assigned to the memory-sized hosted queue' >&2
+[[ $(grep -Fc 'queue: hosted-m' .buildkite/pipeline.yml) == 4 ]] || {
+  echo 'Benchmark workflows are not assigned to the memory-sized hosted queue' >&2
   exit 1
 }
 
@@ -59,12 +64,57 @@ grep -Fq 'gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1' 
   exit 1
 }
 
+grep -Fq 'bazel-contrib/setup-bazel@f3f50ea6791b9b0f4c4eeabba4507422426462f5' .github/workflows/grpc.yml || {
+  echo 'gRPC Bazel cache setup is not pinned' >&2
+  exit 1
+}
+
+for workflow in .github/workflows/mastodon.yml .github/workflows/posthog.yml; do
+  grep -Fq 'docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130' "$workflow" || {
+    echo "$workflow QEMU setup is not pinned" >&2
+    exit 1
+  }
+  grep -Fq 'docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f' "$workflow" || {
+    echo "$workflow Buildx setup is not pinned" >&2
+    exit 1
+  }
+  grep -Fq 'docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8' "$workflow" || {
+    echo "$workflow Docker build action is not pinned" >&2
+    exit 1
+  }
+done
+
 grep -Fq './gradlew --build-cache build -x test' workloads/kafka || {
   echo 'Kafka measured command has drifted' >&2
   exit 1
 }
 
-for script in scripts/check scripts/fetch-source scripts/run-kafka workloads/*; do
+grep -Fq 'bazel build :grpc' workloads/grpc || {
+  echo 'gRPC measured command has drifted' >&2
+  exit 1
+}
+
+for workflow in .github/workflows/mastodon.yml .github/workflows/posthog.yml; do
+  grep -Fq 'platforms: linux/amd64,linux/arm64' "$workflow" || {
+    echo "$workflow measured platforms have drifted" >&2
+    exit 1
+  }
+  grep -Fq 'cache-from: type=gha' "$workflow" || {
+    echo "$workflow cache import has drifted" >&2
+    exit 1
+  }
+  grep -Fq 'cache-to: type=gha,mode=max' "$workflow" || {
+    echo "$workflow cache export has drifted" >&2
+    exit 1
+  }
+done
+
+grep -Fq 'build-args: BUILDKIT_CONTEXT_KEEP_GIT_DIR=1' .github/workflows/posthog.yml || {
+  echo 'PostHog measured build argument has drifted' >&2
+  exit 1
+}
+
+for script in scripts/check scripts/fetch-source scripts/run-* workloads/*; do
   test -x "$script" || {
     echo "script is not executable: $script" >&2
     exit 1

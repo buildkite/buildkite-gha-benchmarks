@@ -44,6 +44,10 @@ git -C "$destination" \
   -c protocol.ext.allow=never \
   fetch --quiet --no-tags --depth=1 origin "$commit"
 git -C "$destination" checkout --quiet --detach FETCH_HEAD
+git -C "$destination" \
+  -c protocol.file.allow=never \
+  -c protocol.ext.allow=never \
+  submodule update --quiet --init --recursive --depth=1
 
 actual="$(git -C "$destination" rev-parse HEAD)"
 readonly actual

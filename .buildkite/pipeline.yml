@@ -26,3 +26,57 @@ steps:
           runners:
             - runs-on: ubuntu-24.04
               queue: hosted-m
+
+  - label: ":github: gRPC via buildkite-gha"
+    key: "grpc-buildkite-gha"
+    if: build.env("BENCHMARK") == "grpc"
+    timeout_in_minutes: 20
+    retry:
+      automatic: false
+    cache: "/cache/bkcache/github-actions-buildkite-plugin"
+    plugins:
+      - mise#a5845c5082d3a4fe36dd77ae74973dfc86fc91a2:
+          version: "2026.5.12"
+          dir: ".buildkite/mise-go"
+      - github-actions#v0.9.3:
+          workflow: .github/workflows/grpc.yml
+          version: "0.29.0"
+          runners:
+            - runs-on: ubuntu-24.04
+              queue: hosted-m
+
+  - label: ":github: Mastodon via buildkite-gha"
+    key: "mastodon-buildkite-gha"
+    if: build.env("BENCHMARK") == "mastodon"
+    timeout_in_minutes: 20
+    retry:
+      automatic: false
+    cache: "/cache/bkcache/github-actions-buildkite-plugin"
+    plugins:
+      - mise#a5845c5082d3a4fe36dd77ae74973dfc86fc91a2:
+          version: "2026.5.12"
+          dir: ".buildkite/mise-go"
+      - github-actions#v0.9.3:
+          workflow: .github/workflows/mastodon.yml
+          version: "0.29.0"
+          runners:
+            - runs-on: ubuntu-24.04
+              queue: hosted-m
+
+  - label: ":github: PostHog via buildkite-gha"
+    key: "posthog-buildkite-gha"
+    if: build.env("BENCHMARK") == "posthog"
+    timeout_in_minutes: 20
+    retry:
+      automatic: false
+    cache: "/cache/bkcache/github-actions-buildkite-plugin"
+    plugins:
+      - mise#a5845c5082d3a4fe36dd77ae74973dfc86fc91a2:
+          version: "2026.5.12"
+          dir: ".buildkite/mise-go"
+      - github-actions#v0.9.3:
+          workflow: .github/workflows/posthog.yml
+          version: "0.29.0"
+          runners:
+            - runs-on: ubuntu-24.04
+              queue: hosted-m

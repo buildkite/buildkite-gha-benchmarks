@@ -12,8 +12,9 @@ contracts, not published performance claims.
 
 Upstream repositories and commits are locked in
 [`benchmarks/lock.json`](benchmarks/lock.json). Exact measured commands live in
-[`workloads`](workloads). Kafka is the first executable provider lane and uses
-[`scripts/run-kafka`](scripts/run-kafka).
+[`workloads`](workloads). Purpose-built workflows under
+`.github/workflows` preserve each target's toolchain, platforms, and cache
+behavior.
 
 | Target | Command |
 | --- | --- |
@@ -24,27 +25,27 @@ Upstream repositories and commits are locked in
 
 ## Run the canary
 
-Create a Buildkite build for the same repository commit with
-`BENCHMARK=kafka` to run the Buildkite lane. The pipeline imports
-`.github/workflows/kafka.yml` using the pinned `github-actions`
-Buildkite plugin and `buildkite-gha` release. It maps
-`ubuntu-24.04` to the `hosted-m` queue because Kafka's upstream Gradle settings
-request a 4 GiB daemon heap. The lane enables Gradle's local build cache and
-transports Gradle User Home through the setup action. Builds without
-`BENCHMARK=kafka` run only the static harness checks, so pushes and pull
-requests cannot accidentally start the paid Kafka workload.
+Create a Buildkite build for the same repository commit with `BENCHMARK` set to
+`kafka`, `grpc`, `mastodon`, or `posthog`. The selected lane imports its matching
+workflow using the pinned `github-actions` Buildkite plugin and
+`buildkite-gha` release. All four workflows map `ubuntu-24.04` to the
+`hosted-m` queue. Builds without a recognized `BENCHMARK` value run only the
+static harness checks, so pushes and pull requests cannot accidentally start a
+paid workload.
 
-Each successful workload writes `benchmark-result.json`. Failed Gradle builds
-also write a result and return the original failure status. A failure before
-the benchmark script starts, such as Java setup or job provisioning failure,
-is represented by the provider's job result instead.
+The Kafka and gRPC scripts write `benchmark-result.json` and return the original
+build status. Container-build timing comes from the executable job because the
+Docker build action owns that operation. A failure before a benchmark starts,
+such as tool setup or job provisioning failure, is represented by the provider's
+job result.
 
 ## Cache modes
 
-The Kafka lane currently measures cached/default operation. It enables the
-local Gradle build cache and allows the setup action to restore and save Gradle
-User Home. A cacheless mode must use a separate cache namespace and result
-series; cached and cacheless results must not be combined.
+Each lane measures cached/default operation. Kafka transports Gradle User Home,
+gRPC enables Bazelisk, disk, and repository caches, and the container workflows
+use BuildKit's GitHub Actions cache backend with maximal export. A cacheless
+mode must use a separate cache namespace and result series; cached and cacheless
+results must not be combined.
 
 Provider-level network, operating-system, and transparent storage caches may
 still affect either mode.
