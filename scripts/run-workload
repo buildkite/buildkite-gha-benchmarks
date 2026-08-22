@@ -88,6 +88,12 @@ esac
 readonly repository upstream_sha cpu_count memory_bytes architecture kernel
 readonly os_id os_version tools_json
 
+provider=github-actions
+if [[ -n ${BUILDKITE:-} ]]; then
+  provider=buildkite
+fi
+readonly provider
+
 success=false
 (( status == 0 )) && success=true
 
@@ -96,6 +102,7 @@ tmp_result="$result.tmp"
 jq -n \
   --arg schema 'buildkite-gha-benchmarks/result/v1' \
   --arg workload "$workload" \
+  --arg provider "$provider" \
   --arg harness_sha "$harness_sha" \
   --arg repository "$repository" \
   --arg upstream_sha "$upstream_sha" \
@@ -117,7 +124,7 @@ jq -n \
     schema: $schema,
     workload: $workload,
     mode: "cached",
-    provider: "buildkite",
+    provider: $provider,
     harness_sha: $harness_sha,
     upstream: {
       repository: $repository,

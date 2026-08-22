@@ -8,8 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  buildkite:
-    name: Buildkite cached
+  benchmark:
+    name: Cached build
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:

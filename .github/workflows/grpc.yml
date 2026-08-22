@@ -8,8 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  buildkite:
-    name: Buildkite cached
+  benchmark:
+    name: Cached build
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -33,6 +33,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: grpc-buildkite-result
+          name: grpc-result
           path: benchmark-result.json
           if-no-files-found: warn

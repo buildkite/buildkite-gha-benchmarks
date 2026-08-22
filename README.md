@@ -25,9 +25,10 @@ behavior.
 
 ## Run the canary
 
-Create a Buildkite build for the same repository commit with `BENCHMARK` set to
-`kafka`, `grpc`, `mastodon`, or `posthog`. The selected lane imports its matching
-workflow using the pinned `github-actions` Buildkite plugin and
+Run any workflow manually from the GitHub Actions UI. To run the same workflow
+on Buildkite, create a build for the same repository commit with `BENCHMARK` set
+to `kafka`, `grpc`, `mastodon`, or `posthog`. The selected lane imports the
+matching workflow using the pinned `github-actions` Buildkite plugin and
 `buildkite-gha` release. All four workflows map `ubuntu-24.04` to the
 `hosted-m` queue. Builds without a recognized `BENCHMARK` value run only the
 static harness checks, so pushes and pull requests cannot accidentally start a
