@@ -14,6 +14,7 @@ jobs:
     timeout-minutes: 60
     env:
       GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED: true
+      GRADLE_BUILD_ACTION_CACHE_KEY_PREFIX: kafka-cross-provider-20260822
     steps:
       - name: Checkout benchmark harness
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,6 +32,7 @@ jobs:
         uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
         with:
           cache-read-only: false
+          gradle-home-cache-strict-match: true
 
       - name: Run Kafka canary
         run: scripts/run-kafka
