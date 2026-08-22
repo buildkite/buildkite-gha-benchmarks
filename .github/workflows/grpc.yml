@@ -18,8 +18,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up C++ toolchain
+        run: |
+          if ! command -v gcc >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --yes build-essential
+          fi
+
       - name: Set up Bazel
-        uses: bazel-contrib/setup-bazel@f3f50ea6791b9b0f4c4eeabba4507422426462f5 # v0.9.1
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # v0.19.0
         with:
           cache-version: grpc-cross-provider-20260822
           bazelisk-cache: true
