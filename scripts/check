@@ -54,7 +54,7 @@ grep -Fq 'version: "0.29.0"' .buildkite/pipeline.yml || {
   exit 1
 }
 
-grep -Fq 'gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808' .github/workflows/kafka.yml || {
+grep -Fq 'gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1' .github/workflows/kafka.yml || {
   echo 'Kafka Gradle cache setup is not pinned' >&2
   exit 1
 }
