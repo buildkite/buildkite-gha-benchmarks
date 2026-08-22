@@ -7,8 +7,7 @@ Actions compatibility on Buildkite.
 
 The repository pins four engineering targets: Apache Kafka, gRPC, Mastodon,
 and PostHog. The target commands build Kafka with Gradle, gRPC with Bazel, and
-multi-platform Mastodon and PostHog container images. These are workload
-contracts, not published performance claims.
+multi-platform Mastodon and PostHog container images.
 
 Upstream repositories and commits are locked in
 [`benchmarks/lock.json`](benchmarks/lock.json). Exact measured commands live in
@@ -50,6 +49,22 @@ results must not be combined.
 
 Provider-level network, operating-system, and transparent storage caches may
 still affect either mode.
+
+## Kafka result
+
+On August 22, 2026, both providers ran the same isolated Kafka cache transition
+on four CPUs and 16 GiB memory. The prime built `f311e621`, then the measured
+run advanced to `e28414ee`. Both providers reported identical task outcomes.
+Times show the measured workload followed by the complete job in parentheses.
+
+| Phase | GitHub Actions | Buildkite | Executed | Cached | Up-to-date |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Prime | [12m55 (13m41)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/32565952135) | [5m10 (6m06)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/39) | 755 | 2 | 2 |
+| Measured | [4m19 (5m01)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/32566619307) | [1m41 (3m44)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/41) | 388 | 305 | 66 |
+
+This is one observed transition, not an aggregate. The workflow uses a unique
+Gradle cache-key prefix and strict cache matching so neither provider can
+restore a previous result series.
 
 ## Validate locally
 
