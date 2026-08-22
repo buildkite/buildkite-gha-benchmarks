@@ -20,17 +20,19 @@ jobs:
 
       - name: Set up C++ toolchain
         run: |
-          if ! command -v gcc >/dev/null; then
+          if ! command -v gcc >/dev/null || ! command -v g++ >/dev/null; then
             sudo apt-get update
             sudo apt-get install --yes build-essential
           fi
+          echo "CC=$(command -v gcc)" >> "$GITHUB_ENV"
+          echo "CXX=$(command -v g++)" >> "$GITHUB_ENV"
 
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # v0.19.0
         with:
-          cache-version: grpc-cross-provider-20260822
+          cache-version: grpc-cross-provider-20260822-v2
           bazelisk-cache: true
-          disk-cache: grpc-cross-provider-20260822
+          disk-cache: grpc-cross-provider-20260822-v2
           repository-cache: true
           token: ""
 
