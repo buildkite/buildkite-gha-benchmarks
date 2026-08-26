@@ -22,7 +22,7 @@ steps:
           dir: ".buildkite/mise-go"
       - github-actions#v0.9.3:
           workflow: .github/workflows/kafka.yml
-          version: "0.35.1"
+          version: "0.37.0"
           runners:
             - runs-on: ubuntu-24.04
               queue: hosted-m
@@ -30,7 +30,7 @@ steps:
                 paths:
                   - /home/runner/.gradle/caches
                   - /home/runner/.gradle/wrapper
-                name: kafka-gradle-volume-20260825
+                name: kafka-gradle-volume-20260825-v2
                 size: 20g
 
   - label: ":github: gRPC via buildkite-gha"
