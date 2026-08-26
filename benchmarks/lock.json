@@ -7,7 +7,7 @@
     },
     "kafka": {
       "repository": "https://github.com/apache/kafka.git",
-      "commit": "f311e62120f3c852780ae96c690ac3bad9764f4b"
+      "commit": "e28414ee4a1dfa3d093dc10168f944f1a759434e"
     },
     "mastodon": {
       "repository": "https://github.com/mastodon/mastodon.git",
