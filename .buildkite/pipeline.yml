@@ -12,41 +12,45 @@ steps:
   - label: ":floppy_disk: Write cache-volume probe"
     key: "cache-volume-probe-write"
     if: build.env("BENCHMARK") == "cache-volume-probe"
+    agents:
+      queue: "hosted-m"
     command: |
       set -euo pipefail
       probe=/tmp/buildkite-cache-volume-probe
-      findmnt -T "$probe"
-      df -h "$probe"
-      du -sh "$probe"
-      printf '%s\n' 'buildkite-cache-volume-probe-20260826-v1' > "$probe/marker"
-      dd if=/dev/zero of="$probe/payload" bs=1M count=64 conv=fsync status=none
+      findmnt -T "$$probe"
+      df -h "$$probe"
+      du -sh "$$probe"
+      printf '%s\n' 'buildkite-cache-volume-probe-20260826-v2' > "$$probe/marker"
+      dd if=/dev/zero of="$$probe/payload" bs=1M count=64 conv=fsync status=none
       sync
-      sha256sum "$probe/marker" "$probe/payload"
-      du -sh "$probe"
-      df -h "$probe"
+      sha256sum "$$probe/marker" "$$probe/payload"
+      du -sh "$$probe"
+      df -h "$$probe"
     cache:
       paths:
         - /tmp/buildkite-cache-volume-probe
-      name: buildkite-cache-volume-probe-20260826-v1
+      name: buildkite-cache-volume-probe-20260826-v2
       size: 20g
 
   - label: ":mag: Read cache-volume probe"
     key: "cache-volume-probe-read"
     if: build.env("BENCHMARK") == "cache-volume-probe"
     depends_on: "cache-volume-probe-write"
+    agents:
+      queue: "hosted-m"
     command: |
       set -euo pipefail
       probe=/tmp/buildkite-cache-volume-probe
-      findmnt -T "$probe"
-      df -h "$probe"
-      du -sh "$probe"
-      test "$(cat "$probe/marker")" = 'buildkite-cache-volume-probe-20260826-v1'
-      test "$(stat -c '%s' "$probe/payload")" = 67108864
-      sha256sum "$probe/marker" "$probe/payload"
+      findmnt -T "$$probe"
+      df -h "$$probe"
+      du -sh "$$probe"
+      test "$$(cat "$$probe/marker")" = 'buildkite-cache-volume-probe-20260826-v2'
+      test "$$(stat -c '%s' "$$probe/payload")" = 67108864
+      sha256sum "$$probe/marker" "$$probe/payload"
     cache:
       paths:
         - /tmp/buildkite-cache-volume-probe
-      name: buildkite-cache-volume-probe-20260826-v1
+      name: buildkite-cache-volume-probe-20260826-v2
       size: 20g
 
   - label: ":github: Kafka via buildkite-gha"
