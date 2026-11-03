@@ -65,6 +65,7 @@ repository="$(jq -r --arg workload "$workload" '.workloads[$workload].repository
 upstream_sha="$(jq -r --arg workload "$workload" '.workloads[$workload].commit' "$root/benchmarks/lock.json")"
 cpu_count="$(getconf _NPROCESSORS_ONLN)"
 memory_bytes="$(( $(awk '/^MemTotal:/ {print $2}' /proc/meminfo) * 1024 ))"
+cpu_model="$(awk -F ': ' '/^model name/ {print $2; exit}' /proc/cpuinfo)"
 architecture="$(uname -m)"
 kernel="$(uname -r)"
 os_id=unknown
@@ -90,11 +91,13 @@ case "$workload" in
     ;;
   grpc)
     bazel_version="$(bazel --version 2>/dev/null | head -n 1 | tr -d '\r')"
-    tools_json="$(jq -cn --arg bazel "$bazel_version" '{bazel: $bazel}')"
+    cc_version="$("${CC:-gcc}" --version | head -n 1)"
+    cxx_version="$("${CXX:-g++}" --version | head -n 1)"
+    tools_json="$(jq -cn --arg bazel "$bazel_version" --arg cc "$cc_version" --arg cxx "$cxx_version" '{bazel: $bazel, cc: $cc, cxx: $cxx}')"
     ;;
 esac
 
-readonly repository upstream_sha cpu_count memory_bytes architecture kernel
+readonly repository upstream_sha cpu_count memory_bytes cpu_model architecture kernel
 readonly os_id os_version tools_json
 
 provider=github-actions
@@ -123,6 +126,7 @@ jq -n \
   --argjson success "$success" \
   --argjson exit_code "$status" \
   --argjson cpu_count "$cpu_count" \
+  --arg cpu_model "$cpu_model" \
   --argjson memory_bytes "$memory_bytes" \
   --argjson started_at_epoch_ms "$(( started_ns / 1000000 ))" \
   --argjson finished_at_epoch_ms "$(( finished_ns / 1000000 ))" \
@@ -151,6 +155,7 @@ jq -n \
     machine: {
       architecture: $architecture,
       cpu_count: $cpu_count,
+      cpu_model: $cpu_model,
       memory_bytes: $memory_bytes,
       kernel: $kernel,
       os: {id: $os_id, version: $os_version}

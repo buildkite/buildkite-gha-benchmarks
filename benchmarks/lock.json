@@ -3,11 +3,11 @@
   "workloads": {
     "grpc": {
       "repository": "https://github.com/grpc/grpc.git",
-      "commit": "c9bdb307f6866cafea399749a7eb6daa6dd71d7c"
+      "commit": "80eb97543a1ee529064090fcf5f414f457e626b0"
     },
     "kafka": {
       "repository": "https://github.com/apache/kafka.git",
-      "commit": "e28414ee4a1dfa3d093dc10168f944f1a759434e"
+      "commit": "f311e62120f3c852780ae96c690ac3bad9764f4b"
     },
     "mastodon": {
       "repository": "https://github.com/mastodon/mastodon.git",

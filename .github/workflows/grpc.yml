@@ -35,9 +35,9 @@ jobs:
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # v0.19.0
         with:
-          cache-version: grpc-cross-provider-20260822-v4
+          cache-version: grpc-runtime01190-20261103-c9e3-p1
           bazelisk-cache: true
-          disk-cache: grpc-cross-provider-20260822-v4
+          disk-cache: grpc-runtime01190-20261103-c9e3-p1
           module-root: /home/runner/buildkite-gha-benchmarks/grpc
           repository-cache: true
           token: ""
