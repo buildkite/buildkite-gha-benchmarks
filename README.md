@@ -26,8 +26,19 @@ behavior.
 
 Run any workflow manually from the GitHub Actions UI. To run the same workflow
 on Buildkite, create a build for the same repository commit with `BENCHMARK` set
-to `kafka`, `grpc`, `mastodon`, or `posthog`. The selected lane imports the
-matching workflow using the pinned `github-actions` Buildkite plugin and
+to `kafka`, `grpc`, `mastodon`, or `posthog` and
+`BUILDKITE_GITHUB_EVENT=workflow_dispatch`. Without the explicit event, manual
+API builds use `push` context and these workflows are skipped. For example:
+
+```sh
+bk build create -p buildkite/buildkite-gha-benchmarks \
+  -b "$BRANCH" -c "$SHA" \
+  -e BENCHMARK=kafka -e BUILDKITE_GITHUB_EVENT=workflow_dispatch \
+  --yes --no-input
+```
+
+The selected lane imports the matching workflow using the pinned
+`github-actions` Buildkite plugin and
 `buildkite-gha` release. All four workflows map `ubuntu-24.04` to the
 `hosted-m` queue. Builds without a recognized `BENCHMARK` value run only the
 static harness checks, so pushes and pull requests cannot accidentally start a
@@ -50,38 +61,73 @@ results must not be combined.
 Provider-level network, operating-system, and transparent storage caches may
 still affect either mode.
 
-## Kafka result
+For a fresh comparison, change Kafka's `GRADLE_BUILD_ACTION_CACHE_KEY_PREFIX`
+and both gRPC's `cache-version` and `disk-cache` to unused generations. Keep
+Kafka's strict cache matching and gRPC's absolute source path and compiler paths.
+Run the same prime harness commit on both providers, verify initial misses and
+completed cache saves, then change only the source locks for the target commit.
+Verify task/action hits, not only archive restoration. Never reuse a generation
+for an independent repetition.
 
-On August 22, 2026, both providers ran the same isolated Kafka cache transition
-on four CPUs and 16 GiB memory. The prime built `f311e621`, then the measured
-run advanced to `e28414ee`. Both providers reported identical task outcomes.
-Times show the measured workload followed by the complete job in parentheses.
+## November 3, 2026 results
+
+These runs use `buildkite-gha` v0.119.0 and plugin v0.14.0. Both providers ran
+the same [prime harness commit](https://github.com/buildkite/buildkite-gha-benchmarks/commit/4d5d37c87f1a8eb1676056a6f28c2ad1e7238aa5),
+completed cache saves, then ran the same [source-lock-only target commit](https://github.com/buildkite/buildkite-gha-benchmarks/commit/989065716fa431fa235e9861a13ac1b068cf8c58).
+Times show workload seconds followed by complete executable-job seconds in
+parentheses. Queue time and the separate Buildkite importer are excluded.
+
+### Kafka result
+
+The source transition remains `f311e621` → `e28414ee`, matching the
+[August baseline](https://github.com/buildkite/buildkite-gha-benchmarks/blob/214ec90e435dd23dfa9b0397b6bfe9ce070de7f4/README.md#kafka-result).
+Both providers reported identical task outcomes.
 
 | Phase | GitHub Actions | Buildkite | Executed | Cached | Up-to-date |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Prime | [12m55 (13m41)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/32565952135) | [5m10 (6m06)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/39) | 755 | 2 | 2 |
-| Measured | [4m19 (5m01)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/32566619307) | [1m41 (3m44)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/41) | 388 | 305 | 66 |
+| Prime | [624.188 (667)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/41576693275) | [309.863 (367.689)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/81) | 755 | 2 | 2 |
+| Target | [161.134 (203)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/41578808733) | [111.656 (242.309)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/84) | 388 | 305 | 66 |
 
-This is one observed transition, not an aggregate. The workflow uses a unique
-Gradle cache-key prefix and strict cache matching so neither provider can
-restore a previous result series.
+Buildkite's target workload was 1.44× faster, but its complete job took 19.4%
+longer. Gradle setup/cache restore took 75.378s versus about 9s on GitHub;
+the 928 MB dependency archive alone took 62.511s to restore. Gradle post-action
+work took 41.154s versus about 17s. The separate importer took 8.567s.
 
-## gRPC result
+### gRPC result
 
-On August 22, 2026, both providers ran the same isolated gRPC cache transition
-on four CPUs and 16 GiB memory. The prime built `80eb9754`, then the measured
-run advanced to `c9bdb307`. Both providers reported identical Bazel process
-outcomes. Times show the measured workload followed by the complete job in
-parentheses.
+The source transition remains `80eb9754` → `c9bdb307`, matching the
+[August baseline](https://github.com/buildkite/buildkite-gha-benchmarks/blob/214ec90e435dd23dfa9b0397b6bfe9ce070de7f4/README.md#grpc-result).
+Both providers reported identical Bazel process outcomes.
 
 | Phase | GitHub Actions | Buildkite | Disk hits | Local | Internal |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Prime | [17m15 (19m36)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/32570667611) | [6m26 (7m52)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/57) | 0 | 2,013 | 283 |
-| Measured | [57s (3m15)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/32571591918) | [17s (1m44)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/59) | 2,012 | 1 | 283 |
+| Prime | [1100.963 (1174)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/41576697072) | [391.556 (462.096)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/82) | 0 | 2,013 | 283 |
+| Target | [49.067 (132)](https://github.com/buildkite/buildkite-gha-benchmarks/actions/runs/41578813431) | [15.681 (89.998)](https://buildkite.com/buildkite/buildkite-gha-benchmarks/builds/85) | 2,012 | 1 | 283 |
 
-This is one observed transition, not an aggregate. The workflow uses a unique
-setup-bazel cache version and a stable source path so restored disk-cache action
-keys match on both providers.
+Buildkite's target workload was 3.13× faster and its complete job was 1.47×
+faster. Source fetch took 37.060s versus about 67s on GitHub; Bazel setup/cache
+restore took 32.763s versus about 10s. The separate importer took 8.100s.
+
+### Scope and measurement limits
+
+- Each workload has one independent prime→target transition, not an aggregate.
+- Both providers reported four CPUs, approximately 16 GiB RAM and Ubuntu 24.04.
+  Buildkite reported `AMD EPYC`; GitHub targets reported `AMD EPYC 9V45`.
+  CPU model and kernel parity were not established.
+- Java 21.0.13, Gradle 9.7.1, Bazel 9.3.1 and GCC/G++ 13.3.0 matched across
+  providers. Java and Bazel changed since August, so this is not a runtime-only
+  before/after comparison.
+- GitHub reported forcing Node 20 actions onto Node 24. Kafka cache commands used
+  zstd on GitHub and gzip on Buildkite. Neither difference proves a speedup
+  opportunity without a separate controlled experiment.
+- The scripts record CPU model and compiler versions in `benchmark-result.json`.
+  Use the external run identity for the provider: Buildkite hides ambient
+  `BUILDKITE_*` variables, so the result's `provider` field can say `github-actions`.
+  gRPC fetches source before the timed script; its JSON fetch duration only
+  measures source validation. Use job-step timestamps for the actual fetch.
+
+The next performance experiments should target cache restore/transport first,
+then restore-only Kafka targets. No optimization was tested in this series.
 
 ## Validate locally
 
